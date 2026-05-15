@@ -343,10 +343,8 @@ document.addEventListener('DOMContentLoaded', () => {
     authModal.addEventListener('click', (e) => { if (e.target === authModal) authModal.classList.remove('active'); });
     uploadModal.addEventListener('click', (e) => { if (e.target === uploadModal) uploadModal.classList.remove('active'); });
 
-    // =============================================
-    // 7. REAL-TIME FIRESTORE LISTENER
-    // =============================================
-    const q = query(collection(db, "gallery"), orderBy("timestamp", "desc"));
+    // 7. REAL-TIME FIRESTORE LISTENER (Simplified query to avoid index issues)
+    const q = query(collection(db, "gallery")); 
     onSnapshot(q, (snapshot) => {
         snapshot.docChanges().forEach((change) => {
             if (change.type === "added") {
@@ -357,6 +355,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         updateDynamicFilters();
+    }, (error) => {
+        console.error("Firestore Error:", error);
+        alert("Gallery failed to load. Please check your connection.");
     });
 
     function createGalleryItem(docSnap) {
