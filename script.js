@@ -106,6 +106,40 @@ document.addEventListener('DOMContentLoaded', () => {
         filterItems(activeFilter?.getAttribute('data-filter') || 'all', e.target.value.toLowerCase());
     });
 
+    function updateDynamicFilters() {
+        const categories = new Set(['all']);
+        getAllGalleryItems().forEach(item => {
+            const cat = item.getAttribute('data-category');
+            if (cat) categories.add(cat);
+        });
+
+        const filterContainer = document.querySelector('.filter-buttons');
+        if (!filterContainer) return;
+        const activeFilter = filterContainer.querySelector('.active')?.getAttribute('data-filter') || 'all';
+        
+        filterContainer.querySelectorAll('.filter-btn.dynamic').forEach(btn => btn.remove());
+
+        categories.forEach(cat => {
+            if (['all', 'nature', 'tech', 'cars', 'animals'].includes(cat)) return;
+            const btn = document.createElement('button');
+            btn.className = 'filter-btn dynamic';
+            btn.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
+            btn.setAttribute('data-filter', cat);
+            if (cat === activeFilter) btn.classList.add('active');
+            
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                filterItems(cat, searchInput.value.toLowerCase());
+            });
+            filterContainer.appendChild(btn);
+        });
+    }
+
+    // Startup Test
+    logToUI("Checking connection...");
+    
+    // Initial filter run
     document.querySelectorAll('.filter-btn').forEach(button => {
         button.addEventListener('click', () => {
             document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
@@ -201,11 +235,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Real-time listener
     onValue(dRef(db, 'gallery'), (snapshot) => {
+        // Hide loader once we get a response
+        const loader = document.getElementById('loader');
+        if (loader) loader.classList.add('hidden');
+
         document.querySelectorAll('.gallery-item[id^="item-"]').forEach(el => el.remove());
         const data = snapshot.val();
         if (data) {
             Object.keys(data).forEach(id => createGalleryItem(id, data[id]));
         }
+        if (typeof updateDynamicFilters === 'function') updateDynamicFilters();
+    }, (error) => {
+        logToUI("DB Error: " + error.message);
+        const loader = document.getElementById('loader');
+        if (loader) loader.classList.add('hidden');
     });
 
     function createGalleryItem(id, data) {
