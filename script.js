@@ -93,7 +93,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function updateDynamicFilters() {
+        const isAdmin = currentUser && currentUser.email === ADMIN_EMAIL;
         const categories = new Set(['all']);
+        if (isAdmin) categories.add('pending'); // Add pending filter for admin
+
         getAllGalleryItems().forEach(item => {
             const cat = item.getAttribute('data-category');
             if (cat) categories.add(cat);
@@ -106,17 +109,27 @@ document.addEventListener('DOMContentLoaded', () => {
         filterContainer.querySelectorAll('.filter-btn.dynamic').forEach(btn => btn.remove());
 
         categories.forEach(cat => {
-            if (['all', 'nature', 'tech', 'cars', 'animals'].includes(cat)) return;
+            if (cat === 'all' || ['nature', 'tech', 'cars', 'animals'].includes(cat)) {
+                if (cat === 'pending' && !isAdmin) return; // Skip pending for non-admin
+                if (cat !== 'pending') return; 
+            }
+            
             const btn = document.createElement('button');
-            btn.className = 'filter-btn dynamic';
-            btn.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
+            btn.className = `filter-btn dynamic ${cat === 'pending' ? 'review-btn' : ''}`;
+            btn.textContent = cat === 'pending' ? 'Pending Review 🔍' : cat.charAt(0).toUpperCase() + cat.slice(1);
             btn.setAttribute('data-filter', cat);
             if (cat === activeFilter) btn.classList.add('active');
             
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                filterItems(cat, searchInput.value.toLowerCase());
+                if (cat === 'pending') {
+                    getAllGalleryItems().forEach(item => {
+                        item.style.display = item.classList.contains('pending-item') ? 'block' : 'none';
+                    });
+                } else {
+                    filterItems(cat, searchInput.value.toLowerCase());
+                }
             });
             filterContainer.appendChild(btn);
         });
@@ -172,6 +185,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const score = document.getElementById('statScore');
         const rupees = document.getElementById('statRupees');
         
+        if (currentUser.email === ADMIN_EMAIL) {
+            if (uploads) uploads.textContent = "ADMIN";
+            if (score) score.textContent = "N/A";
+            if (rupees) rupees.textContent = "MODERATOR";
+            return;
+        }
+
         // Use once listener for the dashboard stats
         onValue(dRef(db, 'gallery'), (snapshot) => {
             const data = snapshot.val();
@@ -315,7 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="overlay">
                     <span>${data.category}</span>
-                    ${!isApproved ? '<small class="pending-label">(Pending Review)</small>' : ''}
+                    ${!isApproved ? `<small class="pending-label">${isAdmin ? '⚠️ NEEDS APPROVAL' : '(Pending Review)'}</small>` : ''}
                 </div>
             </div>
         `;

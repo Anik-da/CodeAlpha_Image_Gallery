@@ -680,9 +680,15 @@ body {
     transform: scale(1.05);
 }
 
-.pending-item {
-    filter: grayscale(0.5);
-    opacity: 0.8;
+.review-btn {
+    background: rgba(255, 170, 0, 0.1) !important;
+    border-color: #ffaa00 !important;
+    color: #ffaa00 !important;
+}
+
+.review-btn:hover {
+    background: rgba(255, 170, 0, 0.2) !important;
+    box-shadow: 0 0 15px rgba(255, 170, 0, 0.2);
 }
 
 .pending-label {
@@ -691,6 +697,7 @@ body {
     margin-top: 5px;
     color: #ffaa00;
     font-weight: 700;
+    text-shadow: 0 0 5px rgba(255, 170, 0, 0.3);
 }
 
 /* Dashboard Stats */
