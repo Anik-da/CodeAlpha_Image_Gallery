@@ -53,6 +53,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const uploadForm = document.getElementById('uploadForm');
     const btnText = document.getElementById('btnText');
     const btnLoader = document.getElementById('btnLoader');
+    const myDashboardBtn = document.getElementById('myDashboardBtn');
+    const dashboardModal = document.getElementById('dashboardModal');
 
     // Lightbox
     const lightbox = document.getElementById('lightbox');
@@ -157,6 +159,37 @@ document.addEventListener('DOMContentLoaded', () => {
         document.addEventListener('click', () => userDropdown.classList.remove('active'));
     }
 
+    if (myDashboardBtn) {
+        myDashboardBtn.addEventListener('click', () => {
+            if (!currentUser) return;
+            dashboardModal.classList.add('active');
+            updateDashboardStats();
+        });
+    }
+
+    async function updateDashboardStats() {
+        const uploads = document.getElementById('statUploads');
+        const score = document.getElementById('statScore');
+        const rupees = document.getElementById('statRupees');
+        
+        // Use once listener for the dashboard stats
+        onValue(dRef(db, 'gallery'), (snapshot) => {
+            const data = snapshot.val();
+            let count = 0;
+            if (data) {
+                Object.values(data).forEach(item => {
+                    if (item.ownerId === currentUser.uid) count++;
+                });
+            }
+            const totalPoints = count * 10;
+            const totalRupees = (totalPoints / 1000).toFixed(2); 
+            
+            if (uploads) uploads.textContent = count;
+            if (score) score.textContent = totalPoints;
+            if (rupees) rupees.textContent = `₹${totalRupees}`;
+        }, { onlyOnce: true });
+    }
+
     loginBtn.addEventListener('click', () => { setAuthMode(false); authModal.classList.add('active'); });
     signupBtn.addEventListener('click', () => { setAuthMode(true); authModal.classList.add('active'); });
     
@@ -189,7 +222,6 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             logoutBtn.textContent = "Logging out...";
             await signOut(auth);
-            logToUI("Signed out successfully.");
             // Force reload to clear all states and prevent "stuck" UI
             window.location.reload();
         } catch (error) {
@@ -214,12 +246,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('submitUpload').disabled = true;
 
         try {
-            logToUI("Uploading image...");
             const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
             const snapshot = await uploadBytes(sRef(storage, `gallery/${fileName}`), file);
             const url = await getDownloadURL(snapshot.ref);
 
-            logToUI("Saving to RTDB...");
             const newRef = push(dRef(db, 'gallery'));
             await set(newRef, {
                 title, category, url, fileName,
@@ -228,13 +258,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 timestamp: Date.now()
             });
 
-            logToUI("Success!");
             uploadForm.reset();
             uploadModal.classList.remove('active');
             alert("Visual added!");
             window.location.reload();
         } catch (error) {
-            logToUI("Fail: " + error.message);
             alert(error.message);
         } finally {
             btnText.textContent = 'Post to Gallery';
@@ -246,7 +274,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Real-time listener with 100-item limit to prevent "infinite" loading issues
     const galleryQuery = dbQuery(dRef(db, 'gallery'), limitToLast(100));
     onValue(galleryQuery, (snapshot) => {
-        logToUI("Status: SYNCED ✅");
         // Hide loader once we get a response
         const loader = document.getElementById('loader');
         if (loader) loader.classList.add('hidden');

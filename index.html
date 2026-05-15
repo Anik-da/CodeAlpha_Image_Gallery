@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lumina | Premium Image Gallery</title>
     <meta name="description" content="A modern, responsive image gallery with glassmorphism UI and advanced filtering.">
-    <link rel="stylesheet" href="style.css?t=20260515224000">
+    <link rel="stylesheet" href="style.css?t=20260515230000">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
@@ -32,6 +32,7 @@
                     <div class="user-dropdown">
                         <p id="userEmailDisplay"></p>
                         <hr>
+                        <button id="myDashboardBtn">My Status</button>
                         <button id="myUploadsBtn">My Visuals</button>
                         <button id="logoutBtn" class="logout-link">Logout</button>
                     </div>
@@ -231,6 +232,32 @@
         </div>
     </div>
 
-    <script type="module" src="script.js?t=20260515224000"></script>
+    <!-- Dashboard Modal -->
+    <div id="dashboardModal" class="modal">
+        <div class="modal-content glass-card">
+            <span class="close-modal">&times;</span>
+            <h2>My <span class="gradient-text">Status & Score</span></h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-label">Total Uploads</span>
+                    <span id="statUploads" class="stat-value">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Total Score</span>
+                    <span id="statScore" class="stat-value">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Earnings (Est.)</span>
+                    <span id="statRupees" class="stat-value">₹0</span>
+                </div>
+            </div>
+            <div class="dashboard-info">
+                <p><strong>Calculation:</strong> 1 Photo = 10 Points</p>
+                <p><strong>Redeem Rate:</strong> 10,000 Points = ₹10</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="script.js?t=20260515230000"></script>
 </body>
 </html>

@@ -650,3 +650,58 @@ body {
     color: var(--text-dim);
     font-size: 0.95rem;
 }
+
+/* Dashboard Stats */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin: 25px 0;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    transition: 0.3s;
+}
+
+.stat-card:hover {
+    background: rgba(0, 242, 255, 0.05);
+    border-color: var(--accent-primary);
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.stat-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--accent-primary);
+}
+
+.dashboard-info {
+    background: rgba(0, 242, 255, 0.05);
+    border-radius: 12px;
+    padding: 15px;
+    margin-top: 20px;
+    border: 1px dashed var(--accent-primary);
+}
+
+.dashboard-info p {
+    font-size: 0.85rem;
+    color: var(--text-main);
+    margin: 5px 0;
+}
+
+.dashboard-info strong {
+    color: var(--accent-primary);
+}
