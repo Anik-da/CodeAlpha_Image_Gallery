@@ -7,13 +7,14 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
-import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, deleteDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { initializeFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, deleteDoc, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 // Firebase Configuration
 const firebaseConfig = {
   apiKey: "AIzaSyCJRmce7aIWdgDW79NN74dNnmuN_2MMEHM",
   authDomain: "codealpha-image-gallery.firebaseapp.com",
+  databaseURL: "https://codealpha-image-gallery-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "codealpha-image-gallery",
   storageBucket: "codealpha-image-gallery.firebasestorage.app",
   messagingSenderId: "13240440194",
@@ -25,14 +26,49 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const storage = getStorage(app);
-const db = getFirestore(app);
 const auth = getAuth(app);
+
+// SPECIAL FIX: Force Long Polling for Firestore (Fixes regional timeouts)
+const db = initializeFirestore(app, {
+    experimentalForceLongPolling: true,
+    useFetchStreams: false
+});
 
 // Admin Configuration
 const ADMIN_EMAIL = "anik.da@gmail.com";
 let currentUser = null;
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Debug logging to UI
+    const logToUI = (msg) => {
+        console.log(msg);
+        const debugLog = document.getElementById('debugLog') || createDebugLog();
+        if (debugLog) {
+            debugLog.innerHTML += `<div>> ${msg}</div>`;
+            debugLog.scrollTop = debugLog.scrollHeight;
+        }
+    };
+
+    function createDebugLog() {
+        if (document.getElementById('debugLog')) return document.getElementById('debugLog');
+        const div = document.createElement('div');
+        div.id = 'debugLog';
+        div.style.cssText = 'position:fixed;bottom:10px;left:10px;width:300px;height:120px;background:rgba(0,0,0,0.85);color:#0f0;font-family:monospace;font-size:10px;padding:10px;overflow-y:auto;z-index:9999;border:1px solid #333;border-radius:5px;pointer-events:none;';
+        document.body.appendChild(div);
+        return div;
+    }
+
+    // Startup Connection Test
+    logToUI("System: Asia-SE1 Connectivity Active");
+    logToUI("Mode: Long-Polling (Forced)");
+    
+    // Test Firestore connection
+    const testRef = doc(db, "gallery", "init_check");
+    getDoc(testRef).then(() => {
+        logToUI("Status: DATABASE CONNECTED ✅");
+    }).catch((err) => {
+        logToUI("Status: CONNECTION ERROR - Check Rules");
+    });
     // DOM Elements
     const galleryGrid = document.getElementById('gallery');
     const searchInput = document.getElementById('searchInput');
