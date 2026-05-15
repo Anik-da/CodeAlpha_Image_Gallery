@@ -358,6 +358,32 @@ document.addEventListener('DOMContentLoaded', () => {
         updateDeleteVisibility(item);
     }
 
+    // ATTACH LISTENERS TO STATIC IMAGES (Crucial Fix)
+    function initStaticItems() {
+        document.querySelectorAll('.gallery-item').forEach(item => {
+            // Only attach if not already dynamic
+            if (!item.id.startsWith('item-')) {
+                const imgBox = item.querySelector('.image-box');
+                if (imgBox && !imgBox.querySelector('.admin-actions')) {
+                    const actions = document.createElement('div');
+                    actions.className = 'admin-actions';
+                    actions.innerHTML = `<button class="delete-btn">🗑️</button>`;
+                    imgBox.appendChild(actions);
+                    
+                    actions.querySelector('.delete-btn').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if (confirm("Delete this pre-existing photo?")) {
+                            item.remove();
+                            alert("Pre-existing photo removed from view.");
+                        }
+                    });
+                }
+                item.addEventListener('click', () => openLightbox(item));
+            }
+            updateDeleteVisibility(item);
+        });
+    }
+
     async function handleApprove(id) {
         try {
             await set(dRef(db, `gallery/${id}/status`), 'approved');
