@@ -306,16 +306,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const category = document.getElementById('imageCategory').value.trim();
         if (!title || !category) return alert("Please fill in all fields!");
         
-        btnText.textContent = 'Uploading...';
+        btnText.textContent = 'Preparing...';
         btnLoader.classList.remove('hidden');
         document.getElementById('submitUpload').disabled = true;
 
         try {
-            const fileName = `${Date.now()}_${file.name}`;
+            console.log("Starting upload process...");
+            const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
             const storageRef = ref(storage, `gallery/${fileName}`);
+            
+            btnText.textContent = 'Uploading Image...';
+            console.log("Uploading to Storage...");
             const snapshot = await uploadBytes(storageRef, file);
+            
+            btnText.textContent = 'Getting URL...';
+            console.log("Upload complete, getting download URL...");
             const downloadURL = await getDownloadURL(snapshot.ref);
 
+            btnText.textContent = 'Saving to Database...';
+            console.log("Saving to Firestore...");
             await addDoc(collection(db, "gallery"), {
                 title,
                 category,
@@ -326,12 +335,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 timestamp: serverTimestamp()
             });
 
+            console.log("Upload successful!");
             uploadForm.reset();
             uploadModal.classList.remove('active');
-            alert("Upload successful! Refreshing gallery...");
+            alert("Success! Your visual has been posted.");
             window.location.reload();
         } catch (error) {
-            alert(error.message);
+            console.error("Upload Error:", error);
+            alert("Upload failed: " + error.message);
         } finally {
             btnText.textContent = 'Post to Gallery';
             btnLoader.classList.add('hidden');
