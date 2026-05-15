@@ -80,27 +80,109 @@ body {
     -webkit-text-fill-color: transparent;
 }
 
-.nav-right {
+.auth-group {
+    display: flex;
+    gap: 15px;
+}
+
+.nav-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 0.6rem 1.2rem;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.nav-btn.highlight {
+    background: var(--surface-color);
+    border-color: var(--accent-primary);
+}
+
+.nav-btn:hover {
+    border-color: var(--accent-primary);
+    background: rgba(0, 242, 255, 0.05);
+}
+
+.user-profile {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 15px;
 }
 
-.upload-trigger-btn {
-    padding: 0.8rem 1.5rem;
-    background: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary));
-    border: none;
-    border-radius: 30px;
-    color: white;
+.user-menu-wrapper {
+    position: relative;
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    background: var(--accent-secondary);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0, 242, 255, 0.2);
 }
 
-.upload-trigger-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 242, 255, 0.4);
+.user-dropdown {
+    position: absolute;
+    top: 50px;
+    right: 0;
+    width: 200px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 10px;
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    z-index: 1001;
+}
+
+.user-menu-wrapper:hover .user-dropdown {
+    display: flex;
+}
+
+.user-dropdown p {
+    font-size: 0.8rem;
+    padding: 10px;
+    color: var(--text-dim);
+    word-break: break-all;
+}
+
+.user-dropdown button {
+    background: transparent;
+    border: none;
+    color: white;
+    text-align: left;
+    padding: 10px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: 0.2s;
+}
+
+.user-dropdown button:hover {
+    background: var(--surface-color);
+}
+
+.logout-link {
+    color: #ff4d4d !important;
+}
+
+.auth-switch {
+    margin-top: 1.5rem;
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--text-dim);
+}
+
+.auth-switch a {
+    color: var(--accent-primary);
+    text-decoration: none;
 }
 
 .search-container {
@@ -242,13 +324,31 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 
-.image-box {
-    position: relative;
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    overflow: hidden;
-    transition: transform var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+.delete-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 35px;
+    height: 35px;
+    background: rgba(255, 77, 77, 0.9);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    transition: transform 0.2s;
+}
+
+.gallery-item:hover .delete-btn {
+    display: flex;
+}
+
+.delete-btn:hover {
+    transform: scale(1.1);
+    background: #ff0000;
 }
 
 .image-box img {

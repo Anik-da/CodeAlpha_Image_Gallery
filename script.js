@@ -6,8 +6,9 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
-import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -25,6 +26,11 @@ const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const storage = getStorage(app);
 const db = getFirestore(app);
+const auth = getAuth(app);
+
+// Admin Configuration
+const ADMIN_EMAIL = "anik.da@gmail.com"; // Change this to your actual email
+let currentUser = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     // DOM Elements
@@ -33,6 +39,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const filterButtons = document.querySelectorAll('.filter-btn');
     const searchInput = document.getElementById('searchInput');
     const loader = document.getElementById('loader');
+    
+    // Auth Elements
+    const authModal = document.getElementById('authModal');
+    const loginBtn = document.getElementById('loginBtn');
+    const signupBtn = document.getElementById('signupBtn');
+    const toggleAuth = document.getElementById('toggleAuth');
+    const authForm = document.getElementById('authForm');
+    const authContainer = document.getElementById('authContainer');
+    const userProfile = document.getElementById('userProfile');
+    const userEmailDisplay = document.getElementById('userEmailDisplay');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const myUploadsBtn = document.getElementById('myUploadsBtn');
     
     // Upload Elements
     const uploadBtn = document.getElementById('uploadBtn');
@@ -159,45 +177,99 @@ document.addEventListener('DOMContentLoaded', () => {
     nextBtn.addEventListener('click', showNext);
     prevBtn.addEventListener('click', showPrev);
 
-    // 5. Upload Functionality
+    // 5. Auth Logic
+    let isLoginMode = true;
+
+    const toggleAuthMode = () => {
+        isLoginMode = !isLoginMode;
+        document.getElementById('authTitle').innerHTML = isLoginMode ? 'Welcome <span class="gradient-text">Back</span>' : 'Create <span class="gradient-text">Account</span>';
+        document.getElementById('authBtnText').textContent = isLoginMode ? 'Login' : 'Sign Up';
+        document.getElementById('authSwitchText').textContent = isLoginMode ? "Don't have an account?" : "Already have an account?";
+        toggleAuth.textContent = isLoginMode ? 'Sign Up' : 'Login';
+    };
+
+    loginBtn.addEventListener('click', () => { isLoginMode = true; toggleAuthMode(); authModal.classList.add('active'); });
+    signupBtn.addEventListener('click', () => { isLoginMode = false; toggleAuthMode(); authModal.classList.add('active'); });
+    toggleAuth.addEventListener('click', (e) => { e.preventDefault(); toggleAuthMode(); });
+    document.querySelector('.close-auth-modal').addEventListener('click', () => authModal.classList.remove('active'));
+
+    authForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('authEmail').value;
+        const password = document.getElementById('authPassword').value;
+        
+        document.getElementById('authBtnLoader').classList.remove('hidden');
+        document.getElementById('authSubmit').disabled = true;
+
+        try {
+            if (isLoginMode) {
+                await signInWithEmailAndPassword(auth, email, password);
+            } else {
+                await createUserWithEmailAndPassword(auth, email, password);
+            }
+            authModal.classList.remove('active');
+            authForm.reset();
+        } catch (error) {
+            alert(error.message);
+        } finally {
+            document.getElementById('authBtnLoader').classList.add('hidden');
+            document.getElementById('authSubmit').disabled = false;
+        }
+    });
+
+    onAuthStateChanged(auth, (user) => {
+        currentUser = user;
+        if (user) {
+            authContainer.classList.add('hidden');
+            userProfile.classList.remove('hidden');
+            userEmailDisplay.textContent = user.email;
+            document.getElementById('userAvatar').textContent = user.email.charAt(0).toUpperCase();
+        } else {
+            authContainer.classList.remove('hidden');
+            userProfile.classList.add('hidden');
+        }
+        // Refresh gallery to show/hide delete buttons
+        refreshGallery();
+    });
+
+    logoutBtn.addEventListener('click', () => signOut(auth));
+
+    // 6. Upload Functionality
     uploadBtn.addEventListener('click', () => uploadModal.classList.add('active'));
     closeModal.addEventListener('click', () => uploadModal.classList.remove('active'));
     
     uploadForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+        if (!currentUser) return alert("Please login to upload!");
+
         const file = document.getElementById('imageFile').files[0];
         const title = document.getElementById('imageTitle').value;
         const category = document.getElementById('imageCategory').value;
         
-        if (!file) return;
-
-        // Start Loading
         btnText.textContent = 'Uploading...';
         btnLoader.classList.remove('hidden');
         document.getElementById('submitUpload').disabled = true;
 
         try {
-            // 1. Upload to Storage
-            const storageRef = ref(storage, `gallery/${Date.now()}_${file.name}`);
+            const fileName = `${Date.now()}_${file.name}`;
+            const storageRef = ref(storage, `gallery/${fileName}`);
             const snapshot = await uploadBytes(storageRef, file);
             const downloadURL = await getDownloadURL(snapshot.ref);
 
-            // 2. Save Metadata to Firestore
             await addDoc(collection(db, "gallery"), {
                 title,
                 category,
                 url: downloadURL,
+                fileName: fileName,
+                ownerId: currentUser.uid,
+                ownerEmail: currentUser.email,
                 timestamp: serverTimestamp()
             });
 
-            // Success
             uploadForm.reset();
             uploadModal.classList.remove('active');
-            alert('Visual shared successfully!');
         } catch (error) {
-            console.error("Upload failed:", error);
-            alert('Upload failed. Please check your Firebase rules.');
+            alert(error.message);
         } finally {
             btnText.textContent = 'Post to Gallery';
             btnLoader.classList.add('hidden');
@@ -205,34 +277,49 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 6. Real-time Firestore Listener
+    // 7. Real-time Firestore Listener
     const q = query(collection(db, "gallery"), orderBy("timestamp", "desc"));
     onSnapshot(q, (snapshot) => {
-        // Clear previous dynamic items if any (or just append)
-        // For simplicity, we'll append new ones
         snapshot.docChanges().forEach((change) => {
             if (change.type === "added") {
-                const data = change.doc.data();
-                createGalleryItem(data);
+                createGalleryItem(change.doc);
+            } else if (change.type === "removed") {
+                const item = document.getElementById(`item-${change.doc.id}`);
+                if (item) item.remove();
             }
         });
         updateVisibleItems();
     });
 
-    function createGalleryItem(data) {
+    function createGalleryItem(docSnap) {
+        const data = docSnap.data();
+        const id = docSnap.id;
+        
         const item = document.createElement('div');
         item.className = `gallery-item ${data.category}`;
+        item.id = `item-${id}`;
         item.setAttribute('data-category', data.category);
         item.setAttribute('data-title', data.title);
+        item.setAttribute('data-owner', data.ownerId);
         
         item.innerHTML = `
             <div class="image-box">
                 <img src="${data.url}" alt="${data.title}" loading="lazy">
+                <button class="delete-btn" title="Delete">🗑️</button>
                 <div class="overlay">
                     <span>${data.category}</span>
                 </div>
             </div>
         `;
+
+        // Handle Delete
+        const deleteBtn = item.querySelector('.delete-btn');
+        deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (confirm("Are you sure you want to delete this visual?")) {
+                handleDelete(id, data.fileName);
+            }
+        });
 
         item.addEventListener('click', () => {
             currentIndex = visibleItems.indexOf(item);
@@ -240,5 +327,45 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         galleryGrid.prepend(item);
+        updateDeleteVisibility(item, data.ownerId);
     }
+
+    async function handleDelete(docId, fileName) {
+        try {
+            await deleteDoc(doc(db, "gallery", docId));
+            const storageRef = ref(storage, `gallery/${fileName}`);
+            await deleteObject(storageRef);
+        } catch (error) {
+            alert("Error deleting: " + error.message);
+        }
+    }
+
+    function updateDeleteVisibility(item, ownerId) {
+        const deleteBtn = item.querySelector('.delete-btn');
+        const isAdmin = currentUser && currentUser.email === ADMIN_EMAIL;
+        const isOwner = currentUser && currentUser.uid === ownerId;
+        
+        if (isAdmin || isOwner) {
+            deleteBtn.style.display = 'flex';
+        } else {
+            deleteBtn.style.display = 'none';
+        }
+    }
+
+    function refreshGallery() {
+        document.querySelectorAll('.gallery-item[id^="item-"]').forEach(item => {
+            const ownerId = item.getAttribute('data-owner');
+            updateDeleteVisibility(item, ownerId);
+        });
+    }
+
+    myUploadsBtn.addEventListener('click', () => {
+        if (!currentUser) return;
+        galleryItems.forEach(item => item.style.display = 'none');
+        document.querySelectorAll('.gallery-item[id^="item-"]').forEach(item => {
+            const ownerId = item.getAttribute('data-owner');
+            item.style.display = (ownerId === currentUser.uid) ? 'block' : 'none';
+        });
+        updateVisibleItems();
+    });
 });
