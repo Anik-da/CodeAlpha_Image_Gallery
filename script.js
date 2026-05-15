@@ -227,30 +227,27 @@ document.addEventListener('DOMContentLoaded', () => {
     // =============================================
     let isLoginMode = true;
 
-    const toggleAuthMode = () => {
-        isLoginMode = !isLoginMode;
+    function setAuthMode(loginMode) {
+        isLoginMode = loginMode;
         document.getElementById('authTitle').innerHTML = isLoginMode 
             ? 'Welcome <span class="gradient-text">Back</span>' 
             : 'Create <span class="gradient-text">Account</span>';
         document.getElementById('authBtnText').textContent = isLoginMode ? 'Login' : 'Sign Up';
         document.getElementById('authSwitchText').textContent = isLoginMode ? "Don't have an account?" : "Already have an account?";
         toggleAuth.textContent = isLoginMode ? 'Sign Up' : 'Login';
-    };
+    }
 
     loginBtn.addEventListener('click', () => { 
-        isLoginMode = true; 
-        toggleAuthMode(); 
-        toggleAuthMode(); // double-toggle to reset to login
+        setAuthMode(true);
         authModal.classList.add('active'); 
     });
     signupBtn.addEventListener('click', () => { 
-        isLoginMode = false; 
-        toggleAuthMode(); 
-        toggleAuthMode(); // double-toggle to reset to signup
+        setAuthMode(false);
         authModal.classList.add('active'); 
     });
-    toggleAuth.addEventListener('click', (e) => { e.preventDefault(); toggleAuthMode(); });
+    toggleAuth.addEventListener('click', (e) => { e.preventDefault(); setAuthMode(!isLoginMode); });
     closeAuthModal.addEventListener('click', () => authModal.classList.remove('active'));
+
 
     authForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -304,8 +301,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!currentUser) return alert("Please login to upload!");
 
         const file = document.getElementById('imageFile').files[0];
-        const title = document.getElementById('imageTitle').value;
-        const category = document.getElementById('imageCategory').value;
+        if (!file) return alert("Please select an image!");
+        const title = document.getElementById('imageTitle').value.trim();
+        const category = document.getElementById('imageCategory').value.trim();
+        if (!title || !category) return alert("Please fill in all fields!");
         
         btnText.textContent = 'Uploading...';
         btnLoader.classList.remove('hidden');
