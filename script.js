@@ -71,6 +71,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentIndex = 0;
     let visibleItems = Array.from(galleryItems);
 
+    // Initial filter setup
+    updateDynamicFilters();
+
     // 1. Hide Loader
     window.addEventListener('load', () => {
         setTimeout(() => {
@@ -277,7 +280,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 7. Real-time Firestore Listener
     const q = query(collection(db, "gallery"), orderBy("timestamp", "desc"));
     onSnapshot(q, (snapshot) => {
         snapshot.docChanges().forEach((change) => {
@@ -288,17 +290,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (item) item.remove();
             }
         });
+        updateDynamicFilters();
         updateVisibleItems();
     });
 
     function createGalleryItem(docSnap) {
         const data = docSnap.data();
         const id = docSnap.id;
+        const cleanCategory = data.category.toLowerCase().trim();
         
         const item = document.createElement('div');
-        item.className = `gallery-item ${data.category}`;
+        item.className = `gallery-item ${cleanCategory}`;
         item.id = `item-${id}`;
-        item.setAttribute('data-category', data.category);
+        item.setAttribute('data-category', cleanCategory);
         item.setAttribute('data-title', data.title);
         item.setAttribute('data-owner', data.ownerId);
         
@@ -328,6 +332,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
         galleryGrid.prepend(item);
         updateDeleteVisibility(item, data.ownerId);
+    }
+
+    function updateDynamicFilters() {
+        const categories = new Set(['all']);
+        document.querySelectorAll('.gallery-item').forEach(item => {
+            categories.add(item.getAttribute('data-category'));
+        });
+
+        const filterContainer = document.querySelector('.filter-buttons');
+        const activeFilter = filterContainer.querySelector('.active')?.getAttribute('data-filter') || 'all';
+        filterContainer.innerHTML = '';
+
+        categories.forEach(cat => {
+            const btn = document.createElement('button');
+            btn.className = `filter-btn ${cat === activeFilter ? 'active' : ''}`;
+            btn.setAttribute('data-filter', cat);
+            btn.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
+            
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                filterItems(cat, searchInput.value.toLowerCase());
+            });
+            filterContainer.appendChild(btn);
+        });
     }
 
     async function handleDelete(docId, fileName) {
