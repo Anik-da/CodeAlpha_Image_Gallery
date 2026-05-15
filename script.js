@@ -3,6 +3,25 @@
  * Handles filtering, search, and lightbox functionality
  */
 
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyCJRmce7aIWdgDW79NN74dNnmuN_2MMEHM",
+  authDomain: "codealpha-image-gallery.firebaseapp.com",
+  projectId: "codealpha-image-gallery",
+  storageBucket: "codealpha-image-gallery.firebasestorage.app",
+  messagingSenderId: "13240440194",
+  appId: "1:13240440194:web:b58f9bdb01456ada906b9b",
+  measurementId: "G-83DH5RREQ4"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+
 document.addEventListener('DOMContentLoaded', () => {
     // DOM Elements
     const galleryItems = document.querySelectorAll('.gallery-item');
