@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lumina | Premium Image Gallery</title>
+    <meta name="description" content="A modern, responsive image gallery with glassmorphism UI and advanced filtering.">
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body class="dark-theme">
+    <div class="loader-wrapper" id="loader">
+        <div class="loader"></div>
+    </div>
+
+    <nav class="glass-nav">
+        <div class="logo">LUMINA</div>
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Search images...">
+            <span class="search-icon">🔍</span>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <h1>Discover Extraordinary <span class="gradient-text">Visuals</span></h1>
+        <p>Curated collection of high-resolution imagery for creators.</p>
+    </header>
+
+    <main class="container">
+        <!-- Category Filters -->
+        <div class="filter-wrapper">
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="nature">Nature</button>
+                <button class="filter-btn" data-filter="tech">Technology</button>
+                <button class="filter-btn" data-filter="cars">Cars</button>
+                <button class="filter-btn" data-filter="animals">Animals</button>
+            </div>
+        </div>
+
+        <!-- Image Gallery Grid -->
+        <div class="gallery-grid" id="gallery">
+            <!-- Images will be injected here via JS for better management, or kept static for SEO -->
+            <div class="gallery-item nature" data-category="nature" data-title="Alpine Peaks">
+                <div class="image-box">
+                    <img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=800&q=80" alt="Nature 1" loading="lazy">
+                    <div class="overlay">
+                        <span>Nature</span>
+                    </div>
+                </div>
+            </div>
+            <div class="gallery-item nature" data-category="nature" data-title="Forest Path">
+                <div class="image-box">
+                    <img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=800&q=80" alt="Nature 2" loading="lazy">
+                    <div class="overlay">
+                        <span>Nature</span>
+                    </div>
+                </div>
+            </div>
+            <div class="gallery-item nature" data-category="nature" data-title="Crystal Lake">
+                <div class="image-box">
+                    <img src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=800&q=80" alt="Nature 3" loading="lazy">
+                    <div class="overlay">
+                        <span>Nature</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="gallery-item tech" data-category="tech" data-title="Cyber Circuit">
+                <div class="image-box">
+                    <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80" alt="Tech 1" loading="lazy">
+                    <div class="overlay">
+                        <span>Technology</span>
+                    </div>
+                </div>
+            </div>
+            <div class="gallery-item tech" data-category="tech" data-title="Robotic Future">
+                <div class="image-box">
+                    <img src="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&w=800&q=80" alt="Tech 2" loading="lazy">
+                    <div class="overlay">
+                        <span>Technology</span>
+                    </div>
+                </div>
+            </div>
+            <div class="gallery-item tech" data-category="tech" data-title="Digital Matrix">
+                <div class="image-box">
+                    <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=800&q=80" alt="Tech 3" loading="lazy">
+                    <div class="overlay">
+                        <span>Technology</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="gallery-item cars" data-category="cars" data-title="Supercar Speed">
+                <div class="image-box">
+                    <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80" alt="Cars 1" loading="lazy">
+                    <div class="overlay">
+                        <span>Cars</span>
+                    </div>
+                </div>
+            </div>
+            <div class="gallery-item cars" data-category="cars" data-title="Luxury Ride">
+                <div class="image-box">
+                    <img src="https://images.unsplash.com/photo-1583121274602-3e2820c69888?auto=format&fit=crop&w=800&q=80" alt="Cars 2" loading="lazy">
+                    <div class="overlay">
+                        <span>Cars</span>
+                    </div>
+                </div>
+            </div>
+            <div class="gallery-item cars" data-category="cars" data-title="Classic Velocity">
+                <div class="image-box">
+                    <img src="https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&w=800&q=80" alt="Cars 3" loading="lazy">
+                    <div class="overlay">
+                        <span>Cars</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="gallery-item animals" data-category="animals" data-title="Wild Majesty">
+                <div class="image-box">
+                    <img src="https://images.unsplash.com/photo-1546182990-dffeafbe841d?auto=format&fit=crop&w=800&q=80" alt="Animals 1" loading="lazy">
+                    <div class="overlay">
+                        <span>Animals</span>
+                    </div>
+                </div>
+            </div>
+            <div class="gallery-item animals" data-category="animals" data-title="Arctic Fox">
+                <div class="image-box">
+                    <img src="https://images.unsplash.com/photo-1474511320723-9a56873867b5?auto=format&fit=crop&w=800&q=80" alt="Animals 2" loading="lazy">
+                    <div class="overlay">
+                        <span>Animals</span>
+                    </div>
+                </div>
+            </div>
+            <div class="gallery-item animals" data-category="animals" data-title="Zebra Stripes">
+                <div class="image-box">
+                    <img src="https://images.unsplash.com/photo-1530239827581-04b743f42967?auto=format&fit=crop&w=800&q=80" alt="Animals 3" loading="lazy">
+                    <div class="overlay">
+                        <span>Animals</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Lightbox Modal -->
+    <div id="lightbox" class="lightbox">
+        <span class="close-btn">&times;</span>
+        <div class="lightbox-content">
+            <button class="prev-btn">❮</button>
+            <div class="lightbox-img-container">
+                <img id="lightbox-img" src="" alt="Lightbox Image">
+                <div class="lightbox-caption" id="lightbox-caption"></div>
+            </div>
+            <button class="next-btn">❯</button>
+        </div>
+    </div>
+
+    <footer class="glass-footer">
+        <p>&copy; 2026 Lumina Gallery. Built with passion.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
