@@ -328,6 +328,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             uploadForm.reset();
             uploadModal.classList.remove('active');
+            alert("Upload successful! Refreshing gallery...");
+            window.location.reload();
         } catch (error) {
             alert(error.message);
         } finally {
@@ -416,10 +418,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const deleteBtn = item.querySelector('.delete-btn');
         if (!deleteBtn) return;
 
+        // Strictly only the admin email has delete access
         const isAdmin = currentUser && currentUser.email === ADMIN_EMAIL;
-        const isOwner = currentUser && currentUser.uid === ownerId;
         
-        if (isAdmin || isOwner) {
+        if (isAdmin) {
             deleteBtn.classList.add('can-delete');
         } else {
             deleteBtn.classList.remove('can-delete');
