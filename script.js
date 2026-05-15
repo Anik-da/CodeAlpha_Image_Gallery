@@ -27,8 +27,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const storage = getStorage(app);
-const db = getDatabase(app);
 const auth = getAuth(app);
+
+// FORCED REGIONAL CONNECTION (Asia-SE1)
+const db = getDatabase(app, "https://codealpha-image-gallery-default-rtdb.asia-southeast1.firebasedatabase.app");
 
 const ADMIN_EMAIL = "anik.da@gmail.com";
 let currentUser = null;
@@ -235,6 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Real-time listener
     onValue(dRef(db, 'gallery'), (snapshot) => {
+        logToUI("Status: SYNCED ✅");
         // Hide loader once we get a response
         const loader = document.getElementById('loader');
         if (loader) loader.classList.add('hidden');
