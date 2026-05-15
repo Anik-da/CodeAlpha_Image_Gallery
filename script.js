@@ -5,11 +5,11 @@
  */
 
 // Firebase Imports
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
-import { getStorage, ref as sRef, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
-import { getDatabase, ref as dRef, set, push, onValue, remove, query as dbQuery, limitToLast } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
+import { getStorage, ref as sRef, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+import { getDatabase, ref as dRef, set, push, onValue, remove, query as dbQuery, limitToLast } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 // Firebase Configuration (Direct from your console)
 const firebaseConfig = {
@@ -137,9 +137,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Startup Test
-    logToUI("Checking connection...");
-    
+    // Heartbeat to keep connection alive and show status
+    setInterval(() => {
+        logToUI("Heartbeat: Active ❤️");
+    }, 30000);
+
     // Initial filter run
     document.querySelectorAll('.filter-btn').forEach(button => {
         button.addEventListener('click', () => {
