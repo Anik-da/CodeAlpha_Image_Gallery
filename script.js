@@ -160,12 +160,24 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('authContainer').classList.add('hidden');
             userProfile.classList.remove('hidden');
             userEmailDisplay.textContent = user.email;
+            if (userAvatar) userAvatar.textContent = user.email.charAt(0).toUpperCase();
         } else {
             document.getElementById('authContainer').classList.remove('hidden');
             userProfile.classList.add('hidden');
         }
         refreshGallery();
     });
+
+    // Toggle User Dropdown on Click (More stable than hover)
+    const userAvatar = document.getElementById('userAvatar');
+    const userDropdown = document.querySelector('.user-dropdown');
+    if (userAvatar && userDropdown) {
+        userAvatar.addEventListener('click', (e) => {
+            e.stopPropagation();
+            userDropdown.classList.toggle('active');
+        });
+        document.addEventListener('click', () => userDropdown.classList.remove('active'));
+    }
 
     loginBtn.addEventListener('click', () => { setAuthMode(false); authModal.classList.add('active'); });
     signupBtn.addEventListener('click', () => { setAuthMode(true); authModal.classList.add('active'); });
@@ -195,7 +207,17 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) { alert(error.message); }
     });
 
-    logoutBtn.addEventListener('click', () => signOut(auth));
+    logoutBtn.addEventListener('click', async () => {
+        try {
+            logoutBtn.textContent = "Logging out...";
+            await signOut(auth);
+            logToUI("Signed out successfully.");
+            // Force reload to clear all states and prevent "stuck" UI
+            window.location.reload();
+        } catch (error) {
+            alert("Logout failed: " + error.message);
+        }
+    });
 
     // =============================================
     // UPLOAD & SYNC (RTDB)
