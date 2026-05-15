@@ -6,6 +6,8 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -21,13 +23,24 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
+const storage = getStorage(app);
+const db = getFirestore(app);
 
 document.addEventListener('DOMContentLoaded', () => {
     // DOM Elements
+    const galleryGrid = document.getElementById('gallery');
     const galleryItems = document.querySelectorAll('.gallery-item');
     const filterButtons = document.querySelectorAll('.filter-btn');
     const searchInput = document.getElementById('searchInput');
     const loader = document.getElementById('loader');
+    
+    // Upload Elements
+    const uploadBtn = document.getElementById('uploadBtn');
+    const uploadModal = document.getElementById('uploadModal');
+    const closeModal = document.querySelector('.close-modal');
+    const uploadForm = document.getElementById('uploadForm');
+    const btnText = document.getElementById('btnText');
+    const btnLoader = document.getElementById('btnLoader');
     
     // Lightbox Elements
     const lightbox = document.getElementById('lightbox');
@@ -146,17 +159,86 @@ document.addEventListener('DOMContentLoaded', () => {
     nextBtn.addEventListener('click', showNext);
     prevBtn.addEventListener('click', showPrev);
 
-    // Close on click outside
-    lightbox.addEventListener('click', (e) => {
-        if (e.target === lightbox) closeLightbox();
+    // 5. Upload Functionality
+    uploadBtn.addEventListener('click', () => uploadModal.classList.add('active'));
+    closeModal.addEventListener('click', () => uploadModal.classList.remove('active'));
+    
+    uploadForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const file = document.getElementById('imageFile').files[0];
+        const title = document.getElementById('imageTitle').value;
+        const category = document.getElementById('imageCategory').value;
+        
+        if (!file) return;
+
+        // Start Loading
+        btnText.textContent = 'Uploading...';
+        btnLoader.classList.remove('hidden');
+        document.getElementById('submitUpload').disabled = true;
+
+        try {
+            // 1. Upload to Storage
+            const storageRef = ref(storage, `gallery/${Date.now()}_${file.name}`);
+            const snapshot = await uploadBytes(storageRef, file);
+            const downloadURL = await getDownloadURL(snapshot.ref);
+
+            // 2. Save Metadata to Firestore
+            await addDoc(collection(db, "gallery"), {
+                title,
+                category,
+                url: downloadURL,
+                timestamp: serverTimestamp()
+            });
+
+            // Success
+            uploadForm.reset();
+            uploadModal.classList.remove('active');
+            alert('Visual shared successfully!');
+        } catch (error) {
+            console.error("Upload failed:", error);
+            alert('Upload failed. Please check your Firebase rules.');
+        } finally {
+            btnText.textContent = 'Post to Gallery';
+            btnLoader.classList.add('hidden');
+            document.getElementById('submitUpload').disabled = false;
+        }
     });
 
-    // Keyboard support
-    document.addEventListener('keydown', (e) => {
-        if (!lightbox.classList.contains('active')) return;
-        
-        if (e.key === 'Escape') closeLightbox();
-        if (e.key === 'ArrowRight') showNext();
-        if (e.key === 'ArrowLeft') showPrev();
+    // 6. Real-time Firestore Listener
+    const q = query(collection(db, "gallery"), orderBy("timestamp", "desc"));
+    onSnapshot(q, (snapshot) => {
+        // Clear previous dynamic items if any (or just append)
+        // For simplicity, we'll append new ones
+        snapshot.docChanges().forEach((change) => {
+            if (change.type === "added") {
+                const data = change.doc.data();
+                createGalleryItem(data);
+            }
+        });
+        updateVisibleItems();
     });
+
+    function createGalleryItem(data) {
+        const item = document.createElement('div');
+        item.className = `gallery-item ${data.category}`;
+        item.setAttribute('data-category', data.category);
+        item.setAttribute('data-title', data.title);
+        
+        item.innerHTML = `
+            <div class="image-box">
+                <img src="${data.url}" alt="${data.title}" loading="lazy">
+                <div class="overlay">
+                    <span>${data.category}</span>
+                </div>
+            </div>
+        `;
+
+        item.addEventListener('click', () => {
+            currentIndex = visibleItems.indexOf(item);
+            openLightbox(item);
+        });
+
+        galleryGrid.prepend(item);
+    }
 });

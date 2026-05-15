@@ -16,9 +16,12 @@
 
     <nav class="glass-nav">
         <div class="logo">LUMINA</div>
-        <div class="search-container">
-            <input type="text" id="searchInput" placeholder="Search images...">
-            <span class="search-icon">🔍</span>
+        <div class="nav-right">
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Search images...">
+                <span class="search-icon">🔍</span>
+            </div>
+            <button id="uploadBtn" class="upload-trigger-btn">+ Upload</button>
         </div>
     </nav>
 
@@ -160,6 +163,37 @@
     <footer class="glass-footer">
         <p>&copy; 2026 Lumina Gallery. Built with passion.</p>
     </footer>
+
+    <!-- Upload Modal -->
+    <div id="uploadModal" class="modal">
+        <div class="modal-content glass-card">
+            <span class="close-modal">&times;</span>
+            <h2>Upload New <span class="gradient-text">Visual</span></h2>
+            <form id="uploadForm">
+                <div class="form-group">
+                    <label for="imageFile">Select Image</label>
+                    <input type="file" id="imageFile" accept="image/*" required>
+                </div>
+                <div class="form-group">
+                    <label for="imageTitle">Title</label>
+                    <input type="text" id="imageTitle" placeholder="e.g. Majestic Mountains" required>
+                </div>
+                <div class="form-group">
+                    <label for="imageCategory">Category</label>
+                    <select id="imageCategory" required>
+                        <option value="nature">Nature</option>
+                        <option value="tech">Technology</option>
+                        <option value="cars">Cars</option>
+                        <option value="animals">Animals</option>
+                    </select>
+                </div>
+                <button type="submit" class="submit-btn" id="submitUpload">
+                    <span id="btnText">Post to Gallery</span>
+                    <div id="btnLoader" class="btn-loader hidden"></div>
+                </button>
+            </form>
+        </div>
+    </div>
 
     <script type="module" src="script.js"></script>
 </body>
