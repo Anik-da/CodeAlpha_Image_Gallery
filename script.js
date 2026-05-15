@@ -8,7 +8,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
 import { getStorage, ref as sRef, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
-import { getDatabase, ref as dRef, set, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { getDatabase, ref as dRef, set, push, onValue, remove, query as dbQuery, limitToLast } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 // Firebase Configuration (Direct from your console)
@@ -56,12 +56,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Lightbox
     const lightbox = document.getElementById('lightbox');
-    const lightboxImg = document.getElementById('lightboxImg');
-    const lightboxTitle = document.getElementById('lightboxTitle');
-    const lightboxCategory = document.getElementById('lightboxCategory');
-    const closeLightbox = document.getElementById('closeLightbox');
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
+    const lightboxImg = document.getElementById('lightbox-img');
+    const lightboxCaption = document.getElementById('lightbox-caption');
+    const closeLightbox = document.querySelector('.close-btn');
+    const prevBtn = document.querySelector('.prev-btn');
+    const nextBtn = document.querySelector('.next-btn');
 
     let currentIndex = 0;
 
@@ -171,14 +170,21 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function setAuthMode(isSignUp) {
         authForm.dataset.mode = isSignUp ? 'signup' : 'login';
-        authModal.querySelector('h2').textContent = isSignUp ? 'Create Account' : 'Welcome Back';
-        authForm.querySelector('.btn-primary').textContent = isSignUp ? 'Sign Up' : 'Login';
+        const titleEl = document.getElementById('authTitle');
+        const submitBtnText = document.getElementById('authBtnText');
+        const switchText = document.getElementById('authSwitchText');
+        const toggleLink = document.getElementById('toggleAuth');
+
+        if (titleEl) titleEl.innerHTML = isSignUp ? 'Create <span class="gradient-text">Account</span>' : 'Welcome <span class="gradient-text">Back</span>';
+        if (submitBtnText) submitBtnText.textContent = isSignUp ? 'Sign Up' : 'Login';
+        if (switchText) switchText.textContent = isSignUp ? 'Already have an account?' : "Don't have an account?";
+        if (toggleLink) toggleLink.textContent = isSignUp ? 'Login' : 'Sign Up';
     }
 
     authForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
+        const email = document.getElementById('authEmail').value;
+        const password = document.getElementById('authPassword').value;
         try {
             if (authForm.dataset.mode === 'login') await signInWithEmailAndPassword(auth, email, password);
             else await createUserWithEmailAndPassword(auth, email, password);
@@ -235,8 +241,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Real-time listener
-    onValue(dRef(db, 'gallery'), (snapshot) => {
+    // Real-time listener with 100-item limit to prevent "infinite" loading issues
+    const galleryQuery = dbQuery(dRef(db, 'gallery'), limitToLast(100));
+    onValue(galleryQuery, (snapshot) => {
         logToUI("Status: SYNCED ✅");
         // Hide loader once we get a response
         const loader = document.getElementById('loader');
@@ -245,7 +252,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.gallery-item[id^="item-"]').forEach(el => el.remove());
         const data = snapshot.val();
         if (data) {
-            Object.keys(data).forEach(id => createGalleryItem(id, data[id]));
+            // Reverse so newest are first
+            Object.keys(data).reverse().forEach(id => createGalleryItem(id, data[id]));
         }
         if (typeof updateDynamicFilters === 'function') updateDynamicFilters();
     }, (error) => {
@@ -300,10 +308,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // =============================================
     function openLightbox(item) {
         const img = item.querySelector('img');
-        if (!img) return;
+        if (!img || !lightboxImg || !lightboxCaption) return;
+        
         lightboxImg.src = img.src;
-        lightboxTitle.textContent = item.getAttribute('data-title') || 'Untitled';
-        lightboxCategory.textContent = item.getAttribute('data-category') || 'General';
+        const title = item.getAttribute('data-title') || 'Untitled';
+        const category = item.getAttribute('data-category') || 'General';
+        
+        lightboxCaption.innerHTML = `<h3>${title}</h3><p>${category}</p>`;
         lightbox.classList.add('active');
         
         const visible = getVisibleItems();
