@@ -402,26 +402,74 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', () => {
             authModal.classList.remove('active');
             uploadModal.classList.remove('active');
+            if (contactModal) contactModal.classList.remove('active');
+            if (dashboardModal) dashboardModal.classList.remove('active');
         });
     });
 
     window.addEventListener('click', (e) => {
         if (e.target === authModal) authModal.classList.remove('active');
         if (e.target === uploadModal) uploadModal.classList.remove('active');
+        if (e.target === contactModal) contactModal.classList.remove('active');
+        if (e.target === dashboardModal) dashboardModal.classList.remove('active');
         if (e.target === lightbox) lightbox.classList.remove('active');
     });
 
-    // ATTACH LISTENERS TO STATIC IMAGES (Crucial Fix)
-    function initStaticItems() {
-        document.querySelectorAll('.gallery-item').forEach(item => {
-            // Only attach if not already dynamic
-            if (!item.id.startsWith('item-')) {
-                item.addEventListener('click', () => openLightbox(item));
-                updateDeleteVisibility(item);
-            }
+    // =============================================
+    // CONTACT SYSTEM (RTDB)
+    // =============================================
+    const contactBtn = document.getElementById('contactBtn');
+    const contactBtnUser = document.getElementById('contactBtnUser');
+    const contactModal = document.getElementById('contactModal');
+    const contactForm = document.getElementById('contactForm');
+    const adminContactEdit = document.getElementById('adminContactEdit');
+
+    const openContact = () => {
+        contactModal.classList.add('active');
+        if (currentUser && currentUser.email === ADMIN_EMAIL) {
+            adminContactEdit.classList.remove('hidden');
+        } else {
+            adminContactEdit.classList.add('hidden');
+        }
+    };
+
+    if (contactBtn) contactBtn.addEventListener('click', openContact);
+    if (contactBtnUser) contactBtnUser.addEventListener('click', openContact);
+
+    // Sync Contact Info
+    onValue(dRef(db, 'site_contact'), (snapshot) => {
+        const data = snapshot.val() || { email: 'contact@lumina.com', phone: '+91 1234567890', address: 'Delhi, India' };
+        const dEmail = document.getElementById('displayEmail');
+        const dPhone = document.getElementById('displayPhone');
+        const dAddress = document.getElementById('displayAddress');
+        
+        if (dEmail) dEmail.textContent = data.email;
+        if (dPhone) dPhone.textContent = data.phone;
+        if (dAddress) dAddress.textContent = data.address;
+        
+        // Pre-fill edit form
+        const eEmail = document.getElementById('editEmail');
+        const ePhone = document.getElementById('editPhone');
+        const eAddress = document.getElementById('editAddress');
+        if (eEmail) eEmail.value = data.email;
+        if (ePhone) ePhone.value = data.phone;
+        if (eAddress) eAddress.value = data.address;
+    });
+
+    if (contactForm) {
+        contactForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                await set(dRef(db, 'site_contact'), {
+                    email: document.getElementById('editEmail').value,
+                    phone: document.getElementById('editPhone').value,
+                    address: document.getElementById('editAddress').value
+                });
+                alert("Contact Details Updated!");
+            } catch (error) { alert(error.message); }
         });
     }
-    
+
     initStaticItems();
     updateDynamicFilters();
 });

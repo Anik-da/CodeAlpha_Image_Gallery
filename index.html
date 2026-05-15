@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lumina | Premium Image Gallery</title>
     <meta name="description" content="A modern, responsive image gallery with glassmorphism UI and advanced filtering.">
-    <link rel="stylesheet" href="style.css?t=20260515231500">
+    <link rel="stylesheet" href="style.css?t=20260515233000">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
@@ -22,10 +22,12 @@
                 <span class="search-icon">🔍</span>
             </div>
             <div id="authContainer" class="auth-group">
+                <button id="contactBtn" class="nav-btn">Contact</button>
                 <button id="loginBtn" class="nav-btn">Login</button>
                 <button id="signupBtn" class="nav-btn highlight">Join</button>
             </div>
             <div id="userProfile" class="user-profile hidden">
+                <button id="contactBtnUser" class="nav-btn">Contact</button>
                 <button id="uploadBtn" class="upload-trigger-btn">+ Upload</button>
                 <div class="user-menu-wrapper">
                     <div id="userAvatar" class="avatar">U</div>
@@ -258,6 +260,31 @@
         </div>
     </div>
 
-    <script type="module" src="script.js?t=20260515231500"></script>
+    <!-- Contact Modal -->
+    <div id="contactModal" class="modal">
+        <div class="modal-content glass-card">
+            <span class="close-modal">&times;</span>
+            <h2>Contact <span class="gradient-text">Us</span></h2>
+            <div id="contactDisplay" class="contact-details">
+                <p><strong>Email:</strong> <span id="displayEmail">loading...</span></p>
+                <p><strong>Phone:</strong> <span id="displayPhone">loading...</span></p>
+                <p><strong>Address:</strong> <span id="displayAddress">loading...</span></p>
+            </div>
+            
+            <!-- Admin Edit Section -->
+            <div id="adminContactEdit" class="admin-section hidden">
+                <hr>
+                <h3>Modify Contact (Admin Only)</h3>
+                <form id="contactForm">
+                    <input type="email" id="editEmail" placeholder="New Email" required>
+                    <input type="text" id="editPhone" placeholder="New Phone" required>
+                    <textarea id="editAddress" placeholder="New Address" required></textarea>
+                    <button type="submit" class="submit-btn">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="script.js?t=20260515233000"></script>
 </body>
 </html>
