@@ -178,7 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let count = 0;
             if (data) {
                 Object.values(data).forEach(item => {
-                    if (item.ownerId === currentUser.uid) count++;
+                    if (item.ownerId === currentUser.uid && item.status === 'approved') count++;
                 });
             }
             const totalPoints = count * 10;
@@ -255,7 +255,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 title, category, url, fileName,
                 ownerId: currentUser.uid,
                 ownerEmail: currentUser.email,
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                status: 'pending' // Default to pending
             });
 
             uploadForm.reset();
@@ -292,8 +293,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function createGalleryItem(id, data) {
+        const isApproved = data.status === 'approved';
+        const isOwner = currentUser && data.ownerId === currentUser.uid;
+        const isAdmin = currentUser && currentUser.email === ADMIN_EMAIL;
+
+        // Hide pending items from the public
+        if (!isApproved && !isOwner && !isAdmin) return;
+
         const item = document.createElement('div');
-        item.className = `gallery-item ${data.category.toLowerCase().trim()}`;
+        item.className = `gallery-item ${data.category.toLowerCase().trim()} ${!isApproved ? 'pending-item' : ''}`;
         item.id = `item-${id}`;
         item.setAttribute('data-category', data.category.toLowerCase());
         item.setAttribute('data-title', data.title);
@@ -301,10 +309,24 @@ document.addEventListener('DOMContentLoaded', () => {
         item.innerHTML = `
             <div class="image-box">
                 <img src="${data.url}" alt="${data.title}">
-                <button class="delete-btn">🗑️</button>
-                <div class="overlay"><span>${data.category}</span></div>
+                <div class="admin-actions">
+                    ${isAdmin && !isApproved ? `<button class="approve-btn">Approve ✅</button>` : ''}
+                    <button class="delete-btn">🗑️</button>
+                </div>
+                <div class="overlay">
+                    <span>${data.category}</span>
+                    ${!isApproved ? '<small class="pending-label">(Pending Review)</small>' : ''}
+                </div>
             </div>
         `;
+
+        const approveBtn = item.querySelector('.approve-btn');
+        if (approveBtn) {
+            approveBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                handleApprove(id);
+            });
+        }
 
         item.querySelector('.delete-btn').addEventListener('click', (e) => {
             e.stopPropagation();
@@ -314,6 +336,13 @@ document.addEventListener('DOMContentLoaded', () => {
         item.addEventListener('click', () => openLightbox(item));
         galleryGrid.prepend(item);
         updateDeleteVisibility(item);
+    }
+
+    async function handleApprove(id) {
+        try {
+            await set(dRef(db, `gallery/${id}/status`), 'approved');
+            alert("Photo Approved! Points awarded.");
+        } catch (error) { alert(error.message); }
     }
 
     async function handleDelete(id, fileName) {
