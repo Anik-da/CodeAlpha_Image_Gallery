@@ -438,22 +438,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Sync Contact Info
     onValue(dRef(db, 'site_contact'), (snapshot) => {
-        const data = snapshot.val() || { email: 'contact@lumina.com', phone: '+91 1234567890', address: 'Delhi, India' };
+        const data = snapshot.val() || { email: 'contact@lumina.com' };
         const dEmail = document.getElementById('displayEmail');
-        const dPhone = document.getElementById('displayPhone');
-        const dAddress = document.getElementById('displayAddress');
-        
         if (dEmail) dEmail.textContent = data.email;
-        if (dPhone) dPhone.textContent = data.phone;
-        if (dAddress) dAddress.textContent = data.address;
         
         // Pre-fill edit form
         const eEmail = document.getElementById('editEmail');
-        const ePhone = document.getElementById('editPhone');
-        const eAddress = document.getElementById('editAddress');
         if (eEmail) eEmail.value = data.email;
-        if (ePhone) ePhone.value = data.phone;
-        if (eAddress) eAddress.value = data.address;
     });
 
     if (contactForm) {
@@ -461,11 +452,9 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             try {
                 await set(dRef(db, 'site_contact'), {
-                    email: document.getElementById('editEmail').value,
-                    phone: document.getElementById('editPhone').value,
-                    address: document.getElementById('editAddress').value
+                    email: document.getElementById('editEmail').value
                 });
-                alert("Contact Details Updated!");
+                alert("Contact Email Updated!");
             } catch (error) { alert(error.message); }
         });
     }
