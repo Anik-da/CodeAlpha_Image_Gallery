@@ -7,7 +7,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
-import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, deleteDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 // Firebase Configuration
@@ -306,43 +306,73 @@ document.addEventListener('DOMContentLoaded', () => {
         const category = document.getElementById('imageCategory').value.trim();
         if (!title || !category) return alert("Please fill in all fields!");
         
+        // Debug logging to UI
+        const logToUI = (msg) => {
+            console.log(msg);
+            const debugLog = document.getElementById('debugLog') || createDebugLog();
+            debugLog.innerHTML += `<div>> ${msg}</div>`;
+            debugLog.scrollTop = debugLog.scrollHeight;
+        };
+
+        function createDebugLog() {
+            const div = document.createElement('div');
+            div.id = 'debugLog';
+            div.style.cssText = 'position:fixed;bottom:10px;left:10px;width:300px;height:150px;background:rgba(0,0,0,0.8);color:#0f0;font-family:monospace;font-size:10px;padding:10px;overflow-y:auto;z-index:9999;border:1px solid #333;border-radius:5px;pointer-events:none;';
+            document.body.appendChild(div);
+            return div;
+        }
+
         btnText.textContent = 'Preparing...';
         btnLoader.classList.remove('hidden');
         document.getElementById('submitUpload').disabled = true;
 
         try {
-            console.log("Starting upload process...");
-            const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+            logToUI("Starting upload...");
+            const cleanFileName = file.name.replace(/[^a-zA-Z0-9.]/g, '_');
+            const fileName = `${Date.now()}_${cleanFileName}`;
             const storageRef = ref(storage, `gallery/${fileName}`);
             
             btnText.textContent = 'Uploading Image...';
-            console.log("Uploading to Storage...");
+            logToUI("Sending to Storage...");
             const snapshot = await uploadBytes(storageRef, file);
             
             btnText.textContent = 'Getting URL...';
-            console.log("Upload complete, getting download URL...");
+            logToUI("Image uploaded. Fetching URL...");
             const downloadURL = await getDownloadURL(snapshot.ref);
 
             btnText.textContent = 'Saving to Database...';
-            console.log("Saving to Firestore...");
-            await addDoc(collection(db, "gallery"), {
+            logToUI("Saving to Firestore...");
+
+            // Use setDoc with a manual ID to avoid addDoc hangs
+            const docId = `img_${Date.now()}`;
+            const docRef = doc(db, "gallery", docId);
+            
+            // Timeout promise
+            const savePromise = setDoc(docRef, {
                 title,
                 category,
                 url: downloadURL,
                 fileName: fileName,
                 ownerId: currentUser.uid,
                 ownerEmail: currentUser.email,
-                timestamp: serverTimestamp()
+                timestamp: Date.now() // Use local timestamp to avoid server hangs
             });
 
-            console.log("Upload successful!");
+            // 15-second timeout for the save operation
+            const timeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error("Database Timeout - Check your Firebase Rules!")), 15000)
+            );
+
+            await Promise.race([savePromise, timeoutPromise]);
+
+            logToUI("Success!");
             uploadForm.reset();
             uploadModal.classList.remove('active');
             alert("Success! Your visual has been posted.");
             window.location.reload();
         } catch (error) {
-            console.error("Upload Error:", error);
-            alert("Upload failed: " + error.message);
+            logToUI("ERROR: " + error.message);
+            alert("Upload failed: " + error.message + "\n\nPlease check the green debug box at the bottom left.");
         } finally {
             btnText.textContent = 'Post to Gallery';
             btnLoader.classList.add('hidden');
